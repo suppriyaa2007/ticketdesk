@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Book Ticket</title>
+    <style>
+        body{font-family:Arial;background:#fff7ed;padding:30px;}
+        .container{width:450px;margin:auto;background:white;padding:20px;border-radius:10px;box-shadow:0 0 10px gray;}
+        input,button{width:100%;padding:10px;margin-top:10px;box-sizing:border-box;}
+        button{background:#ea580c;color:white;border:none;border-radius:5px;cursor:pointer;}
+        li{margin:10px 0;}
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>🎟 Ticket Booking</h2>
+
+    <input type="number" id="studentId" placeholder="Student ID">
+    <input type="number" id="showId" placeholder="Show ID">
+    <input type="number" id="seatsBooked" placeholder="Seats to Book">
+
+    <button onclick="bookTicket()">Book Ticket</button>
+
+    <h3>Booking List</h3>
+    <ul id="bookingList"></ul>
+
+    <button onclick="window.location='index.html'">⬅ Home</button>
+</div>
+
+<script>
+    const API="http://localhost:8081/bookings";
+
+    window.onload=loadBookings;
+
+    function bookTicket(){
+        const studentId=document.getElementById("studentId").value;
+        const showId=document.getElementById("showId").value;
+        const seatsBooked=document.getElementById("seatsBooked").value;
+
+        fetch(`${API}?studentId=${studentId}&showId=${showId}&seatsBooked=${seatsBooked}`,{
+            method:"POST"
+        })
+            .then(res=>res.json())
+            .then(()=>{
+                alert("Ticket Booked Successfully");
+                loadBookings();
+            });
+    }
+
+    function loadBookings(){
+        fetch(API)
+            .then(res=>res.json())
+            .then(data=>{
+                let list=document.getElementById("bookingList");
+                list.innerHTML="";
+                data.forEach(booking=>{
+                    list.innerHTML += `<li>
+                <b>Booking ID:</b> ${booking.bookingId}<br>
+                <b>Student:</b> ${booking.student.name}<br>
+                <b>Movie:</b> ${booking.show.title}<br>
+                <b>Seats:</b> ${booking.seatsBooked}<br>
+                <b>Status:</b> ${booking.status}
+            </li><hr>`;
+                });
+            });
+    }
+</script>
+
+</body>
+</html>

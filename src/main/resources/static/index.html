@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ticket Booking System</title>
+
+    <style>
+        body{
+            font-family:Arial,sans-serif;
+            background:#f3f4f6;
+            margin:0;
+            padding:20px;
+        }
+        h1{
+            text-align:center;
+            color:#1d4ed8;
+        }
+        .section{
+            background:white;
+            padding:20px;
+            margin:20px auto;
+            max-width:600px;
+            border-radius:10px;
+            box-shadow:0 0 10px #ccc;
+        }
+        input,button{
+            width:100%;
+            padding:10px;
+            margin-top:10px;
+            box-sizing:border-box;
+        }
+        button{
+            background:#2563eb;
+            color:white;
+            border:none;
+            border-radius:5px;
+            cursor:pointer;
+        }
+        button:hover{
+            background:#1d4ed8;
+        }
+        ul{
+            padding-left:20px;
+        }
+        li{
+            margin:8px 0;
+        }
+    </style>
+</head>
+
+<body>
+
+<h1>🎬 Ticket Booking Management System</h1>
+
+<!-- STUDENT -->
+<div class="section">
+    <h2>🎓 Student Registration</h2>
+
+    <input id="name" placeholder="Student Name">
+    <input id="email" placeholder="Student Email">
+
+    <button onclick="saveStudent()">Register Student</button>
+
+    <h3>Registered Students</h3>
+    <ul id="studentList"></ul>
+</div>
+
+<!-- SHOW -->
+<div class="section">
+    <h2>🎥 Add Movie Show</h2>
+
+    <input id="title" placeholder="Movie Title">
+    <input id="showTime" placeholder="Show Time (6:00 PM)">
+    <input id="totalSeats" type="number" placeholder="Total Seats">
+
+    <button onclick="addShow()">Add Show</button>
+
+    <h3>Available Shows</h3>
+    <ul id="showList"></ul>
+</div>
+
+<!-- BOOKING -->
+<div class="section">
+    <h2>🎟 Book Ticket</h2>
+
+    <input id="studentId" type="number" placeholder="Student ID">
+    <input id="showId" type="number" placeholder="Show ID">
+    <input id="seatsBooked" type="number" placeholder="Seats to Book">
+
+    <button onclick="bookTicket()">Book Ticket</button>
+
+    <h3>Booking History</h3>
+    <ul id="bookingList"></ul>
+</div>
+
+<script>
+
+    const STUDENT_API="http://localhost:8081/students";
+    const SHOW_API="http://localhost:8081/shows";
+    const BOOKING_API="http://localhost:8081/bookings";
+
+    window.onload=function(){
+        loadStudents();
+        loadShows();
+        loadBookings();
+    };
+
+    /* ---------- STUDENT ---------- */
+
+    function saveStudent(){
+
+        const student={
+            name:document.getElementById("name").value,
+            email:document.getElementById("email").value
+        };
+
+        fetch(STUDENT_API,{
+            method:"POST",
+            headers:{"Content-Type":"application/json"},
+            body:JSON.stringify(student)
+        })
+            .then(res=>res.json())
+            .then(()=>{
+                alert("Student Registered Successfully");
+                document.getElementById("name").value="";
+                document.getElementById("email").value="";
+                loadStudents();
+            });
+    }
+
+    function loadStudents(){
+
+        fetch(STUDENT_API)
+            .then(res=>res.json())
+            .then(data=>{
+
+                let list=document.getElementById("studentList");
+                list.innerHTML="";
+
+                data.forEach(student=>{
+                    list.innerHTML += `<li>${student.studentId} - ${student.name} (${student.email})</li>`;
+                });
+
+            });
+    }
+
+    /* ---------- SHOW ---------- */
+
+    function addShow(){
+
+        const show={
+            title:document.getElementById("title").value,
+            showTime:document.getElementById("showTime").value,
+            totalSeats:Number(document.getElementById("totalSeats").value),
+            availableSeats:Number(document.getElementById("totalSeats").value)
+        };
+
+        fetch(SHOW_API,{
+            method:"POST",
+            headers:{"Content-Type":"application/json"},
+            body:JSON.stringify(show)
+        })
+            .then(res=>res.json())
+            .then(()=>{
+                alert("Movie Show Added");
+                document.getElementById("title").value="";
+                document.getElementById("showTime").value="";
+                document.getElementById("totalSeats").value="";
+                loadShows();
+            });
+    }
+
+    function loadShows(){
+
+        fetch(SHOW_API)
+            .then(res=>res.json())
+            .then(data=>{
+
+                let list=document.getElementById("showList");
+                list.innerHTML="";
+
+                data.forEach(show=>{
+                    list.innerHTML += `<li>${show.showId} - ${show.title} (${show.showTime}) | Seats : ${show.availableSeats}/${show.totalSeats}</li>`;
+                });
+
+            });
+    }
+
+    /* ---------- BOOKING ---------- */
+
+    function bookTicket(){
+
+        let studentId=document.getElementById("studentId").value;
+        let showId=document.getElementById("showId").value;
+        let seats=document.getElementById("seatsBooked").value;
+
+        fetch(`${BOOKING_API}?studentId=${studentId}&showId=${showId}&seatsBooked=${seats}`,{
+            method:"POST"
+        })
+            .then(res=>res.json())
+            .then(()=>{
+                alert("Ticket Booked Successfully");
+                document.getElementById("studentId").value="";
+                document.getElementById("showId").value="";
+                document.getElementById("seatsBooked").value="";
+                loadBookings();
+                loadShows();
+            });
+    }
+
+    function loadBookings(){
+
+        fetch(BOOKING_API)
+            .then(res=>res.json())
+            .then(data=>{
+
+                let list=document.getElementById("bookingList");
+                list.innerHTML="";
+
+                data.forEach(booking=>{
+                    list.innerHTML += `
+            <li>
+                Booking ID: ${booking.bookingId}<br>
+                Student: ${booking.student.name}<br>
+                Movie: ${booking.show.title}<br>
+                Seats: ${booking.seatsBooked}<br>
+                Status: ${booking.status}
+            </li><hr>`;
+                });
+
+            });
+    }
+
+</script>
+
+</body>
+</html>
